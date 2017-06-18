@@ -12,6 +12,7 @@ import java.util.Collections;
 
 public class Navigator extends ParentController {
 
+	private final ModalStack modalStack = new ModalStack();
 	private ViewController root;
 
 	public Navigator(final Activity activity) {
@@ -95,5 +96,17 @@ public class Navigator extends ParentController {
 				parentStackController.popTo(target);
 			}
 		}
+	}
+
+	public void showModal(final ViewController viewController) {
+		modalStack.showModal(viewController);
+	}
+
+	public void dismissModal(final String containerId) {
+		modalStack.dismissModal(containerId);
+	}
+
+	public void dismissAllModals() {
+		modalStack.dismissAll();
 	}
 }

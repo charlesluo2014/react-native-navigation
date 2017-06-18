@@ -2,20 +2,25 @@ package com.reactnativenavigation.react;
 
 import com.facebook.react.ReactInstanceManager;
 import com.facebook.react.bridge.ReactContext;
+import com.facebook.react.devsupport.interfaces.PackagerStatusCallback;
 import com.reactnativenavigation.NavigationActivity;
+import com.reactnativenavigation.utils.UiThread;
 
 public class NavigationReactInitializer implements ReactInstanceManager.ReactInstanceEventListener {
 
 	private final ReactInstanceManager reactInstanceManager;
 	private final DevPermissionRequest devPermissionRequest;
+	private final boolean isDebug;
 	private boolean waitingForAppLaunchEvent = true;
 
 	public NavigationReactInitializer(ReactInstanceManager reactInstanceManager, boolean isDebug) {
 		this.reactInstanceManager = reactInstanceManager;
 		this.devPermissionRequest = new DevPermissionRequest(isDebug);
+		this.isDebug = isDebug;
 	}
 
 	public void onActivityCreated(NavigationActivity activity) {
+		reactInstanceManager.addReactInstanceEventListener(this);
 		waitingForAppLaunchEvent = true;
 	}
 
@@ -24,7 +29,7 @@ public class NavigationReactInitializer implements ReactInstanceManager.ReactIns
 			devPermissionRequest.askPermission(activity);
 		} else {
 			reactInstanceManager.onHostResume(activity, activity);
-			prepareReactApp();
+			checkBundleThenPrepareReact(activity);
 		}
 	}
 
@@ -41,8 +46,29 @@ public class NavigationReactInitializer implements ReactInstanceManager.ReactIns
 		}
 	}
 
-	private void prepareReactApp() {
-		reactInstanceManager.addReactInstanceEventListener(this);
+	private void checkBundleThenPrepareReact(final NavigationActivity activity) {
+		if (isDebug) {
+			reactInstanceManager.getDevSupportManager().isPackagerRunning(new PackagerStatusCallback() {
+				@Override
+				public void onPackagerStatusFetched(final boolean packagerIsRunning) {
+					UiThread.post(new Runnable() {
+						@Override
+						public void run() {
+							if (!packagerIsRunning) {
+								activity.toast("Packager is not running!");
+							} else {
+								prepareReactAppWithWorkingBundle();
+							}
+						}
+					});
+				}
+			});
+		} else {
+			prepareReactAppWithWorkingBundle();
+		}
+	}
+
+	private void prepareReactAppWithWorkingBundle() {
 		if (shouldCreateContext()) {
 			reactInstanceManager.createReactContextInBackground();
 		} else if (waitingForAppLaunchEvent) {

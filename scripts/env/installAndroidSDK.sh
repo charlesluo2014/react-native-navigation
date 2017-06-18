@@ -2,17 +2,18 @@
 
 scriptdir="$(dirname "${BASH_SOURCE[0]}")"
 
-export ANDROID_HOME=$HOME/android-sdk-macosx
-export PATH=$PATH:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools
+export ANDROID_HOME=$HOME/android-sdk
+export PATH=$PATH:$ANDROID_HOME/tools/bin:$ANDROID_HOME/platform-tools
+
+mkdir $ANDROID_HOME
 
 # fix for https://code.google.com/p/android/issues/detail?id=223424
 mkdir -p ~/.android
+touch ~/.android/repositories.cfg
 
-# download android SDK
 echo "Downloading Android SDK"
-curl --location https://dl.google.com/android/android-sdk_r24.4.1-macosx.zip | tar -x -z -C $HOME
+curl --location https://dl.google.com/android/repository/sdk-tools-darwin-3859397.zip | tar -x -z -C $ANDROID_HOME
 
-# copy licenses
-echo "Copying Android licenses"
+echo "Copying Android Licenses"
 mkdir -p "${ANDROID_HOME}"/licenses
 cp "$scriptdir/android-sdk-licenses/"* "${ANDROID_HOME}"/licenses
